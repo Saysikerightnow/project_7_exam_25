@@ -13,4 +13,8 @@ if content_div:
     for para in content_div.find_all("p"):
         print(para.text.strip())
 else:
-    print("No article content found.")
+    print("No article content found.")   
+    
+    Hejkjn
+    
+    
