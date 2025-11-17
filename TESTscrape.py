@@ -15,6 +15,4 @@ if content_div:
 else:
     print("No article content found.")   
     
-    Hejkjn
-    
-    
+    Jeg er verden 
