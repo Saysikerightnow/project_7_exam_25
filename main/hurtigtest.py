@@ -24,66 +24,39 @@ def content_scraper(driver, url):
     try:
         print(f"Loading: {url}")
 
-        # Navigate to the provided URL using Selenium
         driver.get(url)
-
-        # Initialize duration variable
         full_duration = ""
 
         try:
-            # Locate duration span element
             duration_span = driver.find_element(By.CLASS_NAME, "duration")
-            print("Waiting for duration span to load full content...")
+            print("Waiting for duration span to update...")
 
-            # print the seconds until either succes or failure
-            for i in range(30):
-                current_text = duration_span.text.strip()
-                print(f"Second {i+1}: '{current_text}'")
+            # Wait until duration text matches ".../MM:SS" or ".../HH:MM"
+            WebDriverWait(driver, 120).until(
+                lambda d: re.search(
+                    r"/\s*\d+:\d+$",
+                    duration_span.text.strip()
+                )
+            )
 
-                if " / " in current_text:
-                    parts = current_text.split(" / ", 1)
-                    if len(parts) == 2:
-                        candidate = parts[1].strip()
+            # Extract updated duration
+            final_text = duration_span.text.strip()
+            full_duration = final_text.split("/")[-1].strip()
 
-                        if candidate and re.match(r"^\d+:\d+$", candidate):
-                            full_duration = candidate
-                            print(f"Full duration loaded after {i+1} seconds: '{current_text}'")
-                            print(f"Extracted: '{full_duration}'")
-                            break
-
-                time.sleep(1)
-
-            # might be redundant as we really only want to print if we have all the needed data
-            if not full_duration:
-                final_text = duration_span.text.strip()
-                print(f"Final state after 30s: '{final_text}'")
-                if " / " in final_text:
-                    final_parts = final_text.split(" / ", 1)
-                    if len(final_parts) == 2:
-                        final_candidate = final_parts[1].strip()
-                        if final_candidate and re.match(r"^\d+:\d+$", final_candidate):
-                            full_duration = final_candidate
-                            print(f"Got duration at final check: '{full_duration}'")
-                        else:
-                            print(f"Final duration invalid: '{final_candidate}'")
-                            # fallback to scraping everything else anyway
-                else:
-                    print("Unsuccesfull in finding duration")
-                    # fallback to scraping everything else anyway
+            print(f"Duration loaded: {full_duration}")
 
         except Exception as e:
             print(f"Could not find duration span: {e}")
-            # still scrape everything else
             soup = BeautifulSoup(driver.page_source, "html.parser")
             return soup, ""
 
-        # Parse page source with BeautifulSoup
         soup = BeautifulSoup(driver.page_source, "html.parser")
         return soup, full_duration
 
     except Exception as e:
         print(f"Error: {e}")
         return None, ""
+
 
 # Extract metadata and transcript from parsed HTML
 def auto_scraper(soup, full_duration):
@@ -173,7 +146,6 @@ def save_data(scraped_data, transcript_content):
     else:
         print("No transcript to export to .txt file.")
 
-
 # Function: Main loop to scrape URLs from a CSV file and save data
 def main():
     # create driver once and reuse
@@ -214,42 +186,6 @@ def main():
     print("Done!")
 
 # content_scraper to accept driver and url argument
-def content_scraper(driver, url):
-    try:
-        print(f"Loading: {url}")
-
-        driver.get(url)
-        full_duration = ""
-
-        try:
-            duration_span = driver.find_element(By.CLASS_NAME, "duration")
-            print("Waiting for duration span to update...")
-
-            # Wait until duration text matches ".../MM:SS" or ".../HH:MM"
-            WebDriverWait(driver, 120).until(
-                lambda d: re.search(
-                    r"/\s*\d+:\d+$",
-                    duration_span.text.strip()
-                )
-            )
-
-            # Extract updated duration
-            final_text = duration_span.text.strip()
-            full_duration = final_text.split("/")[-1].strip()
-
-            print(f"Duration loaded: {full_duration}")
-
-        except Exception as e:
-            print(f"Could not find duration span: {e}")
-            soup = BeautifulSoup(driver.page_source, "html.parser")
-            return soup, ""
-
-        soup = BeautifulSoup(driver.page_source, "html.parser")
-        return soup, full_duration
-
-    except Exception as e:
-        print(f"Error: {e}")
-        return None, ""
 
 if __name__ == "__main__":
     main()
