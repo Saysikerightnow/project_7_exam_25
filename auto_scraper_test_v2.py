@@ -8,6 +8,7 @@ import os
 def content_scraper():
     # Fetch and parse the page for future use
     url = input("Insert url for desired content \n")
+    # åbner og læser csv per link
     response = requests.get(url)
     soup = BeautifulSoup(response.content, "html.parser")
     # Return "soup" i.e. our parsed content for use in subsequent functions
@@ -39,9 +40,12 @@ def auto_scraper(soup):
         # Start the arguements for handling the content
         if content_fetch:
             # If the content key is = "transcript", then 
-            if key == "transcript":
+            if key == "transcript": 
+                transcript_content = ""
+                for p in content_fetch.find_all("p"):
                 # remove all spaces and html tags. keeps only the text inside content_fetch
-                transcript_content = content_fetch.text.strip()
+                    transcript_content += p.text.strip() + "\n"
+                transcript_content = transcript_content.strip()  # Remove final newline
             elif key == "speech_title":
                 # remove all spaces and html tags. keeps only the text inside content_fetch
                 full_text = content_fetch.text.strip()
