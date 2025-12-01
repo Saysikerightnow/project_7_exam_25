@@ -8,7 +8,6 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import re
 
 # Initialize and return a chrome webdriver instance. This lets us reuse the driver later on
 def setup_driver():
@@ -28,8 +27,8 @@ def content_scraper(driver, url):
         try:
             duration_span = driver.find_element(By.CLASS_NAME, "duration")
             print("Waiting for duration span to update...")
-
-            # Wait until duration text matches "0:00/xxx". Waits up to 120 seconds or 2 minutes
+            
+            # # Using regex wait until duration text matches "0:00/xxx". Waits up to 120 seconds or 2 minutes
             WebDriverWait(driver, 120).until(
                 lambda d: re.search(
                     r"/\s*\d+:\d+$",
