@@ -1,7 +1,6 @@
 
 import csv
 import os
-import time
 import re
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -18,7 +17,6 @@ def setup_driver():
     # chrome_options.add_argument("--headless=new")
     return webdriver.Chrome(options=chrome_options)
 
-
 # Load the url, wait for duration info, and return parsed HTML (soup) and duration
 def content_scraper(driver, url):
     try:
@@ -31,7 +29,7 @@ def content_scraper(driver, url):
             duration_span = driver.find_element(By.CLASS_NAME, "duration")
             print("Waiting for duration span to update...")
 
-            # Wait until duration text matches ".../MM:SS" or ".../HH:MM"
+            # Wait until duration text matches "0:00/xxx". Waits up to 120 seconds or 2 minutes
             WebDriverWait(driver, 120).until(
                 lambda d: re.search(
                     r"/\s*\d+:\d+$",
@@ -46,7 +44,7 @@ def content_scraper(driver, url):
             print(f"Duration loaded: {full_duration}")
 
         except Exception as e:
-            print(f"Could not find duration span: {e}")
+            print(f"Could not find duration span {e}")
             soup = BeautifulSoup(driver.page_source, "html.parser")
             return soup, ""
 
@@ -54,17 +52,14 @@ def content_scraper(driver, url):
         return soup, full_duration
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error {e}")
         return None, ""
 
-
-# Extract metadata and transcript from parsed HTML
+# Extract metadata and transcript from parsed html
 def auto_scraper(soup, full_duration):
     scraped_data = {}
     transcript_content = ""
-
     scraped_data["speech_duration"] = full_duration if full_duration else ""
-
     variables = {
         "president_name": "president-name",
         "speech_title": "presidential-speeches--title",
@@ -78,9 +73,11 @@ def auto_scraper(soup, full_duration):
         if content_fetch:
             if key == "transcript":
                 transcript_content = ""
+                # finds all <p> tags in transcript and extracts only the text inside
                 for p in content_fetch.find_all("p"):
                     transcript_content += p.text.strip() + "\n"
                 transcript_content = transcript_content.strip()
+                # finds the title and extracts only the title, leaving out the date as its redundant
             elif key == "speech_title":
                 full_text = content_fetch.text.strip()
                 if ": " in full_text:
@@ -117,7 +114,6 @@ def save_data(scraped_data, transcript_content):
     speech_subfolder_name = f"{speech_title_cleaned}_{speech_date_cleaned}"
     full_speech_folder_path = os.path.join(president_folder, speech_subfolder_name)
 
-
     try:
         os.makedirs(full_speech_folder_path, exist_ok=True)
         print(f"Created folder structure: '{full_speech_folder_path}'")
@@ -146,18 +142,18 @@ def save_data(scraped_data, transcript_content):
     else:
         print("No transcript to export to .txt file.")
 
-# Function: Main loop to scrape URLs from a CSV file and save data
+# Main loop to scrape urlss from a csv file and save data
 def main():
     # create driver once and reuse
     driver = setup_driver()  
 
-    # Read URLs from CSV file
+    # Read urls from csv file
     urls = []
     with open("test_urls.csv", newline="", encoding="utf-8") as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:  
             if row:
-                # assuming each URL is in the first column
+                # assuming each url is in the first column
                 urls.append(row[0])  
 
     for url in urls:
@@ -165,7 +161,7 @@ def main():
 
         if soup == "NO_DURATION":
             print("No duration found, writing placeholder data.")
-            # placeholder names should the data be missing. Although redundant
+            # placeholder names should the data be missing. Although redundant as alle data besides duration is present in the html
             scraped_data = {               
                 "president_name": "Unknown",                
                 "speech_title": "No Recording",                
@@ -181,11 +177,9 @@ def main():
 
         else:
             print(f"Skipping {url} - page did not load properly")
-    # quit driver once at the end
+    # quit the driver once at the end
     driver.quit()  
     print("Done!")
-
-# content_scraper to accept driver and url argument
 
 if __name__ == "__main__":
     main()
