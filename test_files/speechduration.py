@@ -39,5 +39,12 @@ def pageLoad(url):
 if __name__ == "__main__":
     
     #our url in which we want to visit and perform actions
-    pageUrl = "https://millercenter.org/the-presidency/presidential-speeches"
+    pageUrl = "https://millercenter.org/the-presidency/presidential-speeches/september-30-2025-remarks-military-leaders"
     pageLoad(pageUrl)
+    
+    wait.until(
+    lambda d: re.match(
+        r"^\d+:\d+$",
+        dr.find_element(By.CLASS_NAME, "duration").text.strip().split(" / ")[-1]
+    )
+)
