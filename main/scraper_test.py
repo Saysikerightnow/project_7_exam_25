@@ -4,14 +4,25 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
 
-# start chrome driver
+# start chrome driver and add anti-popup cookies
 def setup_driver():
     chrome_options = Options()
     chrome_options.add_argument("--headless=new") 
-    return webdriver.Chrome(options=chrome_options)
+    driver = webdriver.Chrome(options=chrome_options)
+
+    # load base site once to set cookies
+    driver.get("https://millercenter.org")
+
+    # add anti popup cookies so the site thinks we've been there before
+    driver.add_cookie({"name": "has_seen_email_popup", "value": "true"})
+    driver.add_cookie({"name": "newsletter_subscribed", "value": "1"})
+
+    # reload so cookies take effect
+    driver.get("https://millercenter.org")
+
+    print("anti popup cookies added")
+    return driver
 
 # load url, wait for duration span, return html and duration
 def download_html(driver, url):
@@ -19,29 +30,18 @@ def download_html(driver, url):
     driver.get(url)
     full_duration = ""
 
-    # close the email subscribe popup modal if present. waits 5 seconds
-    try:
-        close_button = WebDriverWait(driver, 5).until(
-            EC.element_to_be_clickable(
-                (By.CLASS_NAME, "block-email-list-promo-modal-close")
-            )
-        )
-        close_button.click()
-        print("closed the popup modal")
-    except TimeoutException:
-        print("no popup modal found or not clickable")
-
     try:
         duration_span = driver.find_element(By.CLASS_NAME, "duration")
         print("waiting for duration span to update")
 
+        # wait until right hand side of duration is no longer empty, e.g., "0:00/71:49"
         WebDriverWait(driver, 120).until(
             lambda d: "/" in duration_span.text and duration_span.text.strip().split("/")[-1] != ""
         )
 
         final_text = duration_span.text.strip()
         full_duration = final_text.split("/")[-1].strip()
-        print(f"duration loaded: {full_duration}")
+        print(f"duration loaded {full_duration}")
 
     except Exception as e:
         print(f"could not find duration span {e}")
@@ -59,7 +59,7 @@ def save_html_file(html_content, index):
 
     print(f"saved html: {file_path}")
 
-# main program
+# main function to handle url reading and 
 def main():
     driver = setup_driver()
 
@@ -75,11 +75,9 @@ def main():
     for i, url in enumerate(urls, start=1):
         html_content, full_duration = download_html(driver, url)
         save_html_file(html_content, i)
-        print(f"speech duration: {full_duration}\n")
 
     driver.quit()
     print("all html files downloaded.")
 
 if __name__ == "__main__":
     main()
-
