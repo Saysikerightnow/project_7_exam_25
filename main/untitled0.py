@@ -1,3 +1,10 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Dec  1 14:52:03 2025
+
+@author: suwathysuthendrarajah
+"""
 
 import csv
 import os
@@ -8,14 +15,23 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import re
+from selenium.common.exceptions import NoSuchElementException, ElementNotInteractableException
+
 
 # Initialize and return a chrome webdriver instance. This lets us reuse the driver later on
 def setup_driver():
-    chrome_options = Options()
-    # Run Chrome in headless mode so it doesnt pop op
-    # chrome_options.add_argument("--headless=new")
-    return webdriver.Chrome(options=chrome_options)
+    driver = setup_driver()
+
+    # Load base site once
+    driver.get("https://millercenter.org")
+
+    # Add anti-popup cookies
+    driver.add_cookie({"name": "has_seen_email_popup", "value": "true"})
+    driver.add_cookie({"name": "newsletter_subscribed", "value": "1"})
+
+    # Now continue normal scraping
+
+
 
 # Load the url, wait for duration info, and return parsed HTML (soup) and duration
 def content_scraper(driver, url):
@@ -23,6 +39,10 @@ def content_scraper(driver, url):
         print(f"Loading: {url}")
 
         driver.get(url)
+    
+    
+
+        
         full_duration = ""
 
         try:
