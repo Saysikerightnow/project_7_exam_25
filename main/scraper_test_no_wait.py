@@ -2,8 +2,6 @@ import os
 import csv
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 
 # start chrome driver and add anti popup cookies
 def setup_driver():
@@ -42,7 +40,7 @@ def save_html_file(html_content, index):
 
     print(f"saved html: {file_path}")
 
-# main function to handle url reading and 
+# main function to handle url reading
 def main():
     driver = setup_driver()
 
