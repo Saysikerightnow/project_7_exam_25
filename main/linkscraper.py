@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Dec 16 14:33:14 2025
-
-@author: Bruger
-"""
-
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -14,7 +7,7 @@ import csv
 def link_scraper():
 # This script uses selenium to auto scroll the url and then parses the conten. at the end it writes every link to a csv file with a row for each link
 
-# Initialize WebDriver
+# Initialize webdriver
     driver = webdriver.Chrome() 
     url = "https://millercenter.org/the-presidency/presidential-speeches"
     driver.get(url)
@@ -38,7 +31,7 @@ def link_scraper():
     soup = BeautifulSoup(driver.page_source, "html.parser")
     # Process and save the data as needed
 
-    # Close the WebDriver session
+    # Close the webdriver session
     driver.quit()
 
     content_fetch = soup.find("div", class_="views-infinite-scroll-content-wrapper clearfix")
