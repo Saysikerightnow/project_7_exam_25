@@ -23,5 +23,6 @@ def update_bar(_):
     fig = px.bar(counts, x="president_name", y="count")
     return fig
 
-if __name__ == "_main_":
+if __name__ == "__main__":
    app.run(debug=False, port=2525)
+
