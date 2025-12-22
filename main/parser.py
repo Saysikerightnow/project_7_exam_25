@@ -42,7 +42,7 @@ def auto_parser(soup):
 
     return scraped_data, transcript_content
 
-# clean text for safe folder/file names
+# clean text for safe folder/file names. "Cleans" a string by removing special characters. replaces spaces with underscores
 def clean_text(text):
     return "".join(c for c in text if c.isalnum() or c in (" ", "_", "-")).replace(" ", "_")
 

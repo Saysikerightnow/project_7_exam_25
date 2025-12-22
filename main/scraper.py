@@ -6,7 +6,9 @@ from selenium.webdriver.chrome.options import Options
 
 # start chrome driver and add anti popup cookies
 def setup_driver():
+    # adds the ability to include options
     chrome_options = Options()
+    # runs the selenium popup browser in "headless" mode which is "invisible" thus no popup/runs in the background
     chrome_options.add_argument("--headless=new")
     driver = webdriver.Chrome(options=chrome_options)
 
@@ -33,6 +35,7 @@ def download_html(driver, url):
 
 # save html as speech_1, speech_2, in a folder
 def save_html_file(html_content, index):
+    # makes the directory if it doesnt exist
     os.makedirs("html_pages", exist_ok=True)
     file_path = os.path.join("html_pages", f"speech_{index}.html")
 
@@ -47,7 +50,7 @@ def main():
 
     # read urls from csv
     urls = []
-    with open("test_urls.csv", newline="", encoding="utf-8") as csvfile:
+    with open("urls.csv", newline="", encoding="utf-8") as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:
             if row:
