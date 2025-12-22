@@ -25,7 +25,7 @@ def setup_driver():
     print("anti popup cookies added")
     return driver
 
-# load url, wait for duration span, return html and duration
+# load url and then return the HTML
 def download_html(driver, url):
     print(f"loading {url}")
     driver.get(url)
