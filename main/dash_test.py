@@ -75,8 +75,6 @@ def update_bar(_):
         Input("bar_chart", "clickData")
 )
 def update_wordcloud(clickData):
-    if not clickData:
-        return go.Figure()
     
     president = clickData["points"][0]["x"]
     text = load_president_text(president)
