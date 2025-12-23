@@ -1,7 +1,7 @@
 import pandas as pd
 import dash
 from dash import html, dcc
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import os
 import numpy as np
 import plotly.express as px
@@ -41,7 +41,6 @@ def load_president_text(president_name):
             if os.path.isfile(transcript_path):
                 with open(transcript_path, encoding="utf-8") as f:
                     full_text += f.read() + " "
-    # returns combined text of all speeches for the president
     return full_text
 
 # clean text by removing stopwords, non alphabetic words, and optionally filter by pos tagging
@@ -50,15 +49,9 @@ def clean_text(text, pos_filter="ALL"):
     words = [w.lower() for w in words if w.isalpha() and w.lower() not in stop_words]
     lemmatized = [lemmatizer.lemmatize(w) for w in words]
 
-    # apply pos filtering if requested
     if pos_filter != "ALL":
-        tagged = pos_tag(lemmatized)
-        pos_map = {"NN": "NN", "VB": "VB", "JJ": "JJ"}
-        target = pos_map.get(pos_filter)
-        if target:
-            lemmatized = [w for w, t in tagged if t.startswith(target)]
+        lemmatized = [w for w, t in pos_tag(lemmatized) if t.startswith(pos_filter)]
 
-    # returns word frequencies
     return Counter(lemmatized)
 
 # generate the wordcloud image
@@ -69,8 +62,11 @@ def generate_wordcloud_image(word_counts, max_words=50):
 
 app.layout = html.Div([
     html.H1("Presidential Speeches"),
+
     dcc.Graph(id="bar_chart"),
-    # dropdown to filter words by pos
+
+    dcc.Store(id="selected_presidents", data=[]),
+
     dcc.Dropdown(
         id="pos-filter",
         options=[
@@ -81,7 +77,16 @@ app.layout = html.Div([
         ],
         value="ALL"
     ),
-    dcc.Graph(id="wordcloud")
+
+    html.Div([
+        html.Div([
+            dcc.Graph(id="left_wordcloud")
+        ], style={"width": "45%", "display": "inline-block"}),
+
+        html.Div([
+            dcc.Graph(id="right_wordcloud")
+        ], style={"width": "45%", "display": "inline-block"})
+    ])
 ])
 
 @app.callback(
@@ -90,29 +95,55 @@ app.layout = html.Div([
 )
 def update_bar(_):
     counts = data.groupby("president_name").size().reset_index(name="count")
-    # creates a bar chart of number of speeches per president
     fig = px.bar(counts, x="president_name", y="count")
+    fig.update_layout(clickmode="event+select")
     return fig
 
 @app.callback(
-    Output("wordcloud", "figure"),
+    Output("selected_presidents", "data"),
     Input("bar_chart", "clickData"),
+    State("selected_presidents", "data")
+)
+def store_selected(clickData, selected):
+    if not clickData:
+        return selected
+
+    president = clickData["points"][0]["x"]
+
+    if president in selected:
+        return selected
+
+    selected.append(president)
+    return selected[-2:]
+
+@app.callback(
+    Output("left_wordcloud", "figure"),
+    Output("right_wordcloud", "figure"),
+    Input("selected_presidents", "data"),
     Input("pos-filter", "value")
 )
-def update_wordcloud(clickData, pos_filter):
-    if not clickData:
-        # return empty figure when no president is selected
-        return px.imshow(np.zeros((400,600,3), dtype=np.uint8))
-    president = clickData["points"][0]["x"]
-    text = load_president_text(president)
-    word_counts = clean_text(text, pos_filter=pos_filter)
-    img = generate_wordcloud_image(word_counts)
-    fig = px.imshow(img)
+def update_wordclouds(selected, pos_filter):
+    empty_fig = px.imshow(np.zeros((400,600,3), dtype=np.uint8))
+    empty_fig.update_xaxes(visible=False)
+    empty_fig.update_yaxes(visible=False)
 
-    fig.update_xaxes(visible=False)
-    fig.update_yaxes(visible=False)
-    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
-    return fig
+    def build_fig(president):
+        text = load_president_text(president)
+        counts = clean_text(text, pos_filter=pos_filter)
+        img = generate_wordcloud_image(counts)
+        fig = px.imshow(img)
+        fig.update_xaxes(visible=False)
+        fig.update_yaxes(visible=False)
+        fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
+        return fig
+
+    if not selected:
+        return empty_fig, empty_fig
+
+    if len(selected) == 1:
+        return build_fig(selected[0]), empty_fig
+
+    return build_fig(selected[0]), build_fig(selected[1])
 
 if __name__ == "__main__":
     app.run(debug=False, port=2525)
