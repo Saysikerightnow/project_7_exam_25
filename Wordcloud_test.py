@@ -24,4 +24,4 @@ wc= WordCloud(
 wc.generate(text)
 
 #Save as a file
-wc.to_file("wordcloud_output_png")
+wc.to_file("wordcloud_output.png")

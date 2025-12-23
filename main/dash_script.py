@@ -66,7 +66,7 @@ app.layout = html.Div([
     dcc.Graph(id="bar_chart"),
 
     dcc.Store(id="selected_presidents", data=[]),
-
+    # pos dropdown
     dcc.Dropdown(
         id="pos-filter",
         options=[

@@ -8,8 +8,8 @@ Created on Tue Dec 23 13:23:47 2025
 
 import os
 import pandas as pd
-import dash
-from dash import html, dcc
+import dash_script
+from dash_script import html, dcc
 from dash.dependencies import Input, Output, State
 import plotly.express as px
 from wordcloud import WordCloud
@@ -24,7 +24,7 @@ nltk.download("punkt")
 nltk.download("stopwords")
 nltk.download("averaged_perceptron_tagger")
 
-app = dash.Dash(__name__)
+app = dash_script.Dash(__name__)
 
 # Load metadata
 data = pd.read_csv("scraped_data/metadata.csv")
